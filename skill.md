@@ -1,10 +1,10 @@
 ---
-name: publish-claude-skill
+name: publish-claude-code-skill
 description: Use when the user wants to publish a Claude Code skill to GitHub, open-source a local skill folder, prepare a first release, or ask what to do before uploading a skill repo. Trigger for requests about copying a local skill into the current working folder, writing the minimum open-source files, preparing the first commit, setting remotes, or separating manual GitHub steps from commands Claude can run.
 tools: Bash, Read, Write
 ---
 
-# Publish Claude Skill
+# Publish Claude Code Skill
 
 Use this skill when the user wants to turn a local Claude Code skill into a clean GitHub repository.
 
@@ -44,7 +44,7 @@ Explain what each step is for before or alongside the command.
 
 ## Core rule: publish from the current working folder
 
-When the user says something like "用 publish-claude-skill 帮我发这个 skill", interpret it this way by default:
+When the user says something like "用 publish-claude-code-skill 帮我发这个 skill", interpret it this way by default:
 
 - the source skill may be in `.claude/skills/<skill-name>/`
 - Claude should copy the publishable files into a folder in the current working directory

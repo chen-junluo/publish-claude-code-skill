@@ -1,4 +1,4 @@
-# Publish Claude Skill
+# Publish Claude Code Skill
 
 [English version](README.md)
 
