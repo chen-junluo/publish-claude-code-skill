@@ -2,16 +2,21 @@
 
 [English version](README.md)
 
-把本地 Claude Code skill 整理成一个适合放到 GitHub 的干净仓库，并且默认不直接在 `.claude/skills/` 里发布。
+把一个已经存在的本地 Claude Code skill 文件夹整理成适合发布到 GitHub 的仓库。
+
+## Versions
+
+- `v2.0.0`：把 `.claude/skills/` 里的 skill 文件夹当作 canonical source directory，同时也当作仓库本身
+- `v1.0.0`：把本地公开 repo 与 `.claude/skills/` 里的源 skill 文件夹视为两个分离目录
 
 ## 这个 skill 会做什么
 
 这个 skill 用一条简单流程帮你开源 Claude Code skill：
 
-1. 找到源 skill 文件夹
-2. 把可公开的文件复制到当前工作目录下的新文件夹
-3. 在复制后的文件夹里补齐开源所需文件
-4. 在本地创建第一次提交
+1. 找到实际的 skill 文件夹
+2. 检查这个文件夹是否已经具备最小公开文件集
+3. 直接在这个文件夹里清理并补齐开源所需内容
+4. 在这个文件夹里创建或确认本地 Git 提交
 5. 等用户手动创建 GitHub 仓库
 6. 等拿到仓库 URL 后再连接远程并推送
 
@@ -19,11 +24,9 @@
 
 默认假设如下：
 
-- 源 skill 可能在 `.claude/skills/<skill-name>/`
-- 公开仓库应该创建在当前工作目录下
-- Git 初始化、README、LICENSE、`.gitignore`、remote 和 push 都在复制后的文件夹里完成
-
-除非用户明确要求，否则不要直接在 `.claude/skills/` 里原地发布。
+- skill 已经存在于一个真实文件夹里，例如 `.claude/skills/<skill-name>/`
+- 这个同一个文件夹本身就应该成为 Git 仓库
+- Git 初始化、README、LICENSE、`.gitignore`、remote 和 push 都在这个 skill 文件夹里完成
 
 ## 最小开源仓库内容
 
@@ -31,7 +34,7 @@
 
 - `skill.md`
 - `README.md`
-- `README-zh.md`
+- 如果是双语仓库，则包含 `README-zh.md`
 - `LICENSE`
 - `.gitignore`
 
@@ -39,23 +42,22 @@
 
 ### Claude 先做
 
-1. 确认源 skill 文件夹
-2. 在当前工作目录下创建目标文件夹
-3. 复制公开文件到目标文件夹
-4. 清理并补齐开源所需内容
-5. 在复制后的文件夹里初始化 Git
-6. 创建第一次提交
+1. 确认 skill 文件夹
+2. 检查将被发布的文件
+3. 清理并补齐开源所需内容
+4. 如有需要则初始化 Git，否则检查现有 repo 状态
+5. 如有需要则创建第一次提交
 
 ### 用户手动做
 
-7. 在 GitHub 上创建空仓库
-8. 把仓库 URL 发回聊天
+6. 在 GitHub 上创建空仓库
+7. 把仓库 URL 发回聊天
 
 ### 然后 Claude 继续
 
-9. 添加远程仓库
-10. 尝试第一次 push
-11. 如果因为认证或网络失败，明确告诉用户下一步该在本地运行什么命令
+8. 添加远程仓库
+9. 尝试第一次 push
+10. 如果因为认证或网络失败，明确告诉用户下一步该在本地运行什么命令
 
 ## 用户需要手动处理的 GitHub 步骤
 

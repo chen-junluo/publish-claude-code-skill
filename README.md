@@ -2,16 +2,21 @@
 
 [中文说明](README-zh.md)
 
-Turn a local Claude Code skill into a clean GitHub repository without publishing directly from `.claude/skills/`.
+Turn an existing local Claude Code skill folder into a clean GitHub repository.
+
+## Versions
+
+- `v2.0.0`: the skill folder inside `.claude/skills/` is treated as the canonical source directory and the repository itself
+- `v1.0.0`: the workflow treated the local public repo and the `.claude/skills/` source folder as separate directories
 
 ## What this skill does
 
 This skill helps you open-source a Claude Code skill by following a simple workflow:
 
-1. locate the source skill folder
-2. copy its public files into a new folder in the current working directory
-3. prepare that copied folder for publication
-4. create the first commit locally
+1. locate the actual skill folder
+2. check whether that folder already has the minimum public files
+3. clean up the same folder for publication
+4. create or verify the local Git commit in that folder
 5. wait for the user to create the GitHub repository manually
 6. connect the remote and push when the repository URL is ready
 
@@ -19,11 +24,9 @@ This skill helps you open-source a Claude Code skill by following a simple workf
 
 By default, this skill assumes:
 
-- the source skill may live in `.claude/skills/<skill-name>/`
-- the public repository should be created in the current working directory
-- Git work should happen in the copied folder, not in the source skill folder
-
-Do not publish directly from `.claude/skills/` unless the user explicitly asks for that.
+- the skill already lives in a real folder such as `.claude/skills/<skill-name>/`
+- that same folder should become the Git repository
+- Git work should happen in the skill folder itself, not in a copied export folder
 
 ## Minimum repository contents
 
@@ -31,7 +34,7 @@ A minimal open-source skill repository should include:
 
 - `skill.md`
 - `README.md`
-- `README-zh.md`
+- `README-zh.md` if the repo is bilingual
 - `LICENSE`
 - `.gitignore`
 
@@ -39,23 +42,22 @@ A minimal open-source skill repository should include:
 
 ### Claude does first
 
-1. identify the source skill folder
-2. create a target folder in the current working directory
-3. copy the public skill files into that target folder
-4. clean up the copied files for open-source release
-5. initialize Git in the copied folder
-6. create the first commit
+1. identify the skill folder
+2. inspect the files that will be published
+3. clean up the folder for open-source release
+4. initialize Git if needed, or inspect the existing repo
+5. create the first commit if needed
 
 ### The user does manually
 
-7. create an empty GitHub repository
-8. send the repository URL back
+6. create an empty GitHub repository
+7. send the repository URL back
 
 ### Then Claude continues
 
-9. add the remote
-10. try the first push
-11. if push fails because of authentication or network issues, tell the user exactly what to run locally
+8. add the remote
+9. try the first push
+10. if push fails because of authentication or network issues, tell the user exactly what to run locally
 
 ## Manual GitHub step
 

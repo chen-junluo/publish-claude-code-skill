@@ -1,23 +1,28 @@
 ---
 name: publish-claude-code-skill
-description: Use when the user wants to publish a Claude Code skill to GitHub, open-source a local skill folder, prepare a first release, or ask what to do before uploading a skill repo. Trigger for requests about copying a local skill into the current working folder, writing the minimum open-source files, preparing the first commit, setting remotes, or separating manual GitHub steps from commands Claude can run.
+description: Use when the user wants to publish a Claude Code skill to GitHub, open-source a local skill folder, prepare a first release, or ask what to do before uploading a skill repo. Trigger for requests about cleaning up a skill folder for publication, checking the minimum repo files, preparing the first commit, setting remotes, or separating manual GitHub steps from commands Claude can run.
 tools: Bash, Read, Write
 ---
 
 # Publish Claude Code Skill
 
-Use this skill when the user wants to turn a local Claude Code skill into a clean GitHub repository.
+Use this skill when the user wants to turn an existing local Claude Code skill folder into a clean GitHub repository.
 
-This skill assumes the source skill may live inside `.claude/skills/`, but the public repo should be created in the current working folder.
-Do not publish a skill in place from `.claude/skills/` unless the user explicitly asks for that.
+Version notes:
+
+- `v2.0.0`: treat the skill folder inside `.claude/skills/` as the canonical source directory and the repository itself
+- `v1.0.0`: treated the local public repo and the `.claude/skills/` source folder as separate directories
+
+This skill treats the actual skill folder as the repository by default.
+Do not create a second copied repo folder unless the user explicitly asks for that.
 The default workflow is:
 
-1. locate the source skill
-2. copy its public files into a new folder inside the current working directory
-3. prepare that copied folder as the public repo
+1. locate the skill folder
+2. prepare that same folder for open-source publication
+3. create or verify the first local commit in that folder
 4. the user creates the GitHub repository manually
-5. Claude connects the remote and prepares push
-6. the user completes the final push if authentication or network issues require it
+5. Claude adds the remote and prepares push
+6. the user completes authentication or the final push locally if needed
 
 Use this workflow unless the user explicitly asks for a different GitHub automation path.
 
@@ -25,9 +30,8 @@ Use this workflow unless the user explicitly asks for a different GitHub automat
 
 Give the user a short, concrete publishing workflow that includes:
 
-- where the source skill lives
-- where the public repo folder will be created
-- the minimum repository contents
+- where the skill folder lives
+- whether that folder already has the minimum public files
 - the manual steps the user must handle
 - the exact core commands needed for the happy path
 - the common failure points and how to recognize them
@@ -42,16 +46,14 @@ Assume the user may be new to GitHub.
 Prefer plain language over Git jargon.
 Explain what each step is for before or alongside the command.
 
-## Core rule: publish from the current working folder
+## Core rule: publish from the skill folder itself
 
 When the user says something like "用 publish-claude-code-skill 帮我发这个 skill", interpret it this way by default:
 
-- the source skill may be in `.claude/skills/<skill-name>/`
-- Claude should copy the publishable files into a folder in the current working directory
-- Git initialization, README work, LICENSE, `.gitignore`, remote setup, and push preparation should happen in that copied folder
-- do not initialize Git or create the public repo directly inside `.claude/skills/`
-
-Only publish in place from `.claude/skills/` if the user explicitly asks for that.
+- the target is an existing skill folder such as `.claude/skills/<skill-name>/`
+- Claude should inspect and clean up that same folder for publication
+- Git initialization, README work, LICENSE, `.gitignore`, remote setup, and push preparation should happen in that same folder
+- do not create a second publish folder unless the user explicitly asks for a copied export workflow
 
 ## Minimum open-source repo for a Claude Code skill
 
@@ -74,46 +76,24 @@ Do not invent extra files unless the user wants them.
 
 ## Required workflow
 
-### Step 1. Identify the source skill and target publish folder
+### Step 1. Identify the skill folder
 
-First, identify:
-
-- the source skill folder
-- the target folder in the current working directory
+First, identify the skill folder that will become the public repository.
 
 Example pattern:
 
-- source: `~/.claude/skills/<skill-name>/`
-- target: `<current-working-directory>/<repo-name>/`
+- skill folder: `~/.claude/skills/<skill-name>/`
 
-Make this explicit to the user before copying files.
+Make this explicit to the user before editing or running Git commands.
 
-### Step 2. Copy the skill into the current working folder
+### Step 2. Check the skill folder contents
 
-Create a new target folder in the current working directory.
-Then copy the publishable files from the source skill into that folder.
-
-The copied folder is the one that becomes the public GitHub repository.
-Do not treat the source skill folder as the Git repo unless the user explicitly asks for that.
-
-Files to copy usually include:
-
-- `skill.md`
-- `README.md` if it exists
-- `README-zh.md` if it exists
-- `LICENSE` if it exists
-- other small public files the user wants included
-
-Do not copy local clutter such as `.DS_Store`, `.git`, or `.claude/`.
-
-### Step 3. Check the copied folder contents
-
-Before doing Git work, verify that the target folder actually contains the files that will be published.
+Before doing Git work, verify that the skill folder actually contains the files that will be published.
 
 Command:
 
 ```bash
-ls -la "/absolute/path/to/publish-folder"
+ls -la "/absolute/path/to/skill-folder"
 ```
 
 Confirm whether these files exist:
@@ -125,16 +105,16 @@ Confirm whether these files exist:
 
 If the repo is bilingual, also check for `README-zh.md`.
 
-### Step 4. Prepare open-source-safe files in the copied folder
+### Step 3. Prepare open-source-safe files in the skill folder
 
-Make sure the copied content is fit for publication.
+Make sure the folder content is fit for publication.
 Common checks:
 
 - remove personal paths or private assumptions from `skill.md` and README files
 - make the README explain what the skill is, who it is for, and how to start
 - add a visible cross-link near the top of each README if the repo is bilingual
 - use `README-zh.md` as the required Chinese README filename
-- add a `.gitignore` for local clutter
+- add a `.gitignore` for local clutter if missing
 
 A good minimal `.gitignore` for a skill repo is:
 
@@ -148,21 +128,23 @@ Thumbs.db
 .claude/
 ```
 
-### Step 5. Initialize Git in the copied folder
+### Step 4. Initialize Git in the skill folder if needed
 
-If the publish folder is not yet a Git repo, initialize it.
+If the skill folder is not yet a Git repo, initialize it.
 
 ```bash
-git init "/absolute/path/to/publish-folder"
+git init "/absolute/path/to/skill-folder"
 ```
 
 Then rename the default branch to `main`:
 
 ```bash
-git -C "/absolute/path/to/publish-folder" branch -M main
+git -C "/absolute/path/to/skill-folder" branch -M main
 ```
 
-### Step 6. Create the first commit in the copied folder
+If the folder is already a Git repo, inspect status instead of reinitializing it.
+
+### Step 5. Create the first commit in the skill folder
 
 Stage only the files that belong in the public repo.
 Prefer specific file names over broad staging.
@@ -170,13 +152,13 @@ Prefer specific file names over broad staging.
 Typical first commit:
 
 ```bash
-git -C "/absolute/path/to/publish-folder" add .gitignore LICENSE README.md README-zh.md skill.md
+git -C "/absolute/path/to/skill-folder" add .gitignore LICENSE README.md README-zh.md skill.md
 ```
 
 Then commit:
 
 ```bash
-git -C "/absolute/path/to/publish-folder" commit -m "$(cat <<'EOF'
+git -C "/absolute/path/to/skill-folder" commit -m "$(cat <<'EOF'
 Initial open-source release of <Skill Name>
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
@@ -187,10 +169,10 @@ EOF
 After the commit, verify status:
 
 ```bash
-git -C "/absolute/path/to/publish-folder" status --short
+git -C "/absolute/path/to/skill-folder" status --short
 ```
 
-### Step 7. Ask the user to create the GitHub repository manually
+### Step 6. Ask the user to create the GitHub repository manually
 
 This workflow treats GitHub repository creation as a manual step.
 Ask the user to do this on GitHub before continuing.
@@ -208,35 +190,35 @@ Tell the user to:
 
 Do not continue to remote setup until the user gives the repository URL.
 
-### Step 8. Add the remote to the copied folder
+### Step 7. Add the remote to the skill folder
 
-When the user provides the remote URL, add it to the copied publish folder.
+When the user provides the remote URL, add it to the skill folder.
 Prefer HTTPS unless the user explicitly wants SSH.
 
 HTTPS form:
 
 ```bash
-git -C "/absolute/path/to/publish-folder" remote add origin https://github.com/USER/REPO.git
+git -C "/absolute/path/to/skill-folder" remote add origin https://github.com/USER/REPO.git
 ```
 
 SSH form:
 
 ```bash
-git -C "/absolute/path/to/publish-folder" remote add origin git@github.com:USER/REPO.git
+git -C "/absolute/path/to/skill-folder" remote add origin git@github.com:USER/REPO.git
 ```
 
 Check it:
 
 ```bash
-git -C "/absolute/path/to/publish-folder" remote -v
+git -C "/absolute/path/to/skill-folder" remote -v
 ```
 
-### Step 9. Push the copied folder repo to GitHub
+### Step 8. Push the skill folder repo to GitHub
 
 Try the first push:
 
 ```bash
-git -C "/absolute/path/to/publish-folder" push -u origin main
+git -C "/absolute/path/to/skill-folder" push -u origin main
 ```
 
 If push works, report success.
@@ -284,67 +266,52 @@ Use numbered steps, not a loose summary.
 
 ### Claude does first
 
-1. identify the source skill folder
-2. create a target publish folder in the current working directory
-3. copy the public skill files into that target folder
-4. clean up the copied files for open-source release
-5. initialize Git in the copied folder if needed
-6. create the first commit in the copied folder
+1. identify the skill folder
+2. check the files that will be published
+3. clean up the folder for open-source release
+4. initialize Git if needed or inspect the existing repo
+5. create the first commit if needed
 
 ### The user does manually
 
-7. create an empty GitHub repository
-8. send the repository URL back
+6. create an empty GitHub repository
+7. send the repository URL back
 
 ### Then Claude continues
 
-9. add the remote to the copied folder repo
-10. try the first push
-11. if push fails due to authentication or network, tell the user exactly what to run locally
+8. add the remote to the skill folder repo
+9. try the first push
+10. if push fails due to authentication or network, tell the user exactly what to run locally
 
 ## Command cheat sheet
 
 Use these as the minimal happy-path commands.
-Replace the source path, target path, and repo name as needed.
+Replace the skill path and repo name as needed.
 
 ### Local prep
 
 ```bash
-ls -la "/absolute/path/to/source-skill-folder"
+ls -la "/absolute/path/to/skill-folder"
+```
+
+### Initialize Git if needed
+
+```bash
+git init "/absolute/path/to/skill-folder"
 ```
 
 ```bash
-mkdir -p "/absolute/path/to/current-working-directory/repo-name"
-```
-
-```bash
-cp "/absolute/path/to/source-skill-folder/skill.md" "/absolute/path/to/current-working-directory/repo-name/skill.md"
-```
-
-### Check the copied folder
-
-```bash
-ls -la "/absolute/path/to/current-working-directory/repo-name"
-```
-
-### Initialize Git in the copied folder
-
-```bash
-git init "/absolute/path/to/current-working-directory/repo-name"
-```
-
-```bash
-git -C "/absolute/path/to/current-working-directory/repo-name" branch -M main
+git -C "/absolute/path/to/skill-folder" branch -M main
 ```
 
 ### First commit
 
 ```bash
-git -C "/absolute/path/to/current-working-directory/repo-name" add .gitignore LICENSE README.md README-zh.md skill.md
+git -C "/absolute/path/to/skill-folder" add .gitignore LICENSE README.md README-zh.md skill.md
 ```
 
 ```bash
-git -C "/absolute/path/to/current-working-directory/repo-name" commit -m "$(cat <<'EOF'
+git -C "/absolute/path/to/skill-folder" commit -m "$(cat <<'EOF'
 Initial open-source release of <Skill Name>
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
@@ -355,25 +322,25 @@ EOF
 ### Connect remote
 
 ```bash
-git -C "/absolute/path/to/current-working-directory/repo-name" remote add origin https://github.com/USER/REPO.git
+git -C "/absolute/path/to/skill-folder" remote add origin https://github.com/USER/REPO.git
 ```
 
 ```bash
-git -C "/absolute/path/to/current-working-directory/repo-name" remote -v
+git -C "/absolute/path/to/skill-folder" remote -v
 ```
 
 ### Push
 
 ```bash
-git -C "/absolute/path/to/current-working-directory/repo-name" push -u origin main
+git -C "/absolute/path/to/skill-folder" push -u origin main
 ```
 
 ## Recommended response format
 
 When the user asks how to publish a skill, structure the answer like this:
 
-1. where the source skill is
-2. where I will create the public repo folder in the current working directory
+1. where the skill folder is
+2. whether it already has the minimum publishable files
 3. what I can do for you locally right now
 4. what you need to do manually on GitHub
 5. the exact commands I will run or want you to run
@@ -384,7 +351,7 @@ Do not drown the user in Git theory unless they ask.
 
 ## Boundaries
 
-Do not publish directly from `.claude/skills/` unless the user explicitly asks.
+Do not create a second copied repo folder unless the user explicitly asks.
 Do not promise GitHub-side automation unless the user explicitly asks for it and authentication is confirmed.
 Do not assume SSH is configured.
 Do not assume `gh` is installed.
